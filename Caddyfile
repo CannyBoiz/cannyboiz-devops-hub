@@ -12,7 +12,7 @@
 }
 
 # respawn project
-api.cannyboiz.com{
+api.cannyboiz.com {
 # Apply CORS fix from above
     import cors
 
