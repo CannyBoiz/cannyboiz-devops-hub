@@ -11,6 +11,7 @@ services:
       - caddy_config:/config
     networks:
       - caddy_net
+    restart: unless-stopped
 
 volumes:
   caddy_data:
