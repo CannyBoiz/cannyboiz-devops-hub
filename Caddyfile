@@ -1,21 +1,4 @@
-# CORS fix (global settings)
-(cors) {
-    @cors_preflight method OPTIONS
-    handle @cors_preflight {
-        header Access-Control-Allow-Origin "https://cannyboiz.com"
-        header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-        header Access-Control-Allow-Headers "*"
-        header Access-Control-Max-Age "3600"
-        respond "" 204
-    }
-    header Access-Control-Allow-Origin "https://cannyboiz.com"
-}
-
-# respawn project
+# ResPawn API — TLS is automatic via Caddy
 api.cannyboiz.com {
-# Apply CORS fix from above
-    import cors
-
-# Route traffic to the internal docker container named 'respawn-api'
-    reverse_proxy respawn-api:8080
+    reverse_proxy respawn-grpc-client:6760
 }
