@@ -1,4 +1,4 @@
 # ResPawn API — TLS is automatic via Caddy
-api.cannyboiz.com {
+api-respawn.cannyboiz.com {
     reverse_proxy respawn-grpc-client:6760
 }
