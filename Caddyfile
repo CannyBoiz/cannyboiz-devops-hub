@@ -1,4 +1,3 @@
-# ResPawn API — TLS is automatic via Caddy
-api-respawn.cannyboiz.com {
-    reverse_proxy respawn-grpc-client:6760
-}
+# Shared Caddy gateway — zero project-specific routes here.
+# Each project repo owns its own Caddyfile snippet in /etc/caddy/sites/.
+import /etc/caddy/sites/*

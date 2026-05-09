@@ -29,7 +29,11 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/caddy
+            # Ensure the sites directory exists with -p to avoid errors if it already exists
+            mkdir -p sites 
+            # Create the caddy_net network if it doesn't exist with 2>/dev/null to suppress errors if it already exists
+            docker network create caddy_net 2>/dev/null || true
             docker compose pull
             docker compose up -d
-            # reload the caddy_net network (better than docker compose restart, which causes downtime)
+            # Reload Caddy to apply the new configuration
             docker exec caddy-gateway caddy reload --config /etc/caddy/Caddyfile
