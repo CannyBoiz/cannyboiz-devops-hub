@@ -31,3 +31,5 @@ jobs:
             cd /opt/caddy
             docker compose pull
             docker compose up -d
+            # reload the caddy_net network (better than docker compose restart, which causes downtime)
+            docker exec caddy-gateway caddy reload --config /etc/caddy/Caddyfile
