@@ -2,3 +2,9 @@
 github_key
 github_key.pub
 
+# terraform state files
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/*.tfvars
+terraform/*.tfstate
