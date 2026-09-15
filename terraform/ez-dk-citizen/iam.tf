@@ -13,19 +13,20 @@ data "aws_iam_policy_document" "app_s3" {
     ]
 
     resources = [
-      "${aws_s3_bucket.citizenship_audio.arn}/*"
+      "${aws_s3_bucket.citizenship_audio.arn}/audio/*",
+      "${aws_s3_bucket.citizenship_audio.arn}/smoke/*",
     ]
   }
 }
 
 resource "aws_iam_policy" "app_s3" {
-  name = "ez-dk-citizen-s3-access"
+  name        = "ez-dk-citizen-s3-access"
   description = "Allow ez-dk-citizen backend to access audio objects"
 
   policy = data.aws_iam_policy_document.app_s3.json
 }
 
 resource "aws_iam_user_policy_attachment" "name" {
-  user = aws_iam_user.app.name
+  user       = aws_iam_user.app.name
   policy_arn = aws_iam_policy.app_s3.arn
 }
