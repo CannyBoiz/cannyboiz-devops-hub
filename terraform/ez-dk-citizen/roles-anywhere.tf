@@ -48,34 +48,6 @@ resource "aws_iam_role" "app" {
   assume_role_policy   = data.aws_iam_policy_document.roles_anywhere_assume_role.json
 }
 
-# preserve the live broad policy during import; remove it after the
-# least-privilege managed attachment is applied and verified.
-data "aws_iam_policy_document" "legacy_roles_anywhere_s3" {
-  statement {
-    sid       = "ListBucket"
-    effect    = "Allow"
-    actions   = ["s3:ListBucket"]
-    resources = [aws_s3_bucket.citizenship_audio.arn]
-  }
-
-  statement {
-    sid    = "ReadWriteObjects"
-    effect = "Allow"
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject",
-    ]
-    resources = ["${aws_s3_bucket.citizenship_audio.arn}/*"]
-  }
-}
-
-resource "aws_iam_role_policy" "legacy_app_s3" {
-  name   = "Policy"
-  role   = aws_iam_role.app.id
-  policy = data.aws_iam_policy_document.legacy_roles_anywhere_s3.json
-}
-
 resource "aws_iam_role_policy_attachment" "app_s3" {
   role       = aws_iam_role.app.name
   policy_arn = aws_iam_policy.app_s3.arn
