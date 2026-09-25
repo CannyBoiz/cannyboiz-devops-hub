@@ -1,7 +1,3 @@
-resource "aws_iam_user" "app" {
-  name = "ez-dk-citizen-app"
-}
-
 data "aws_iam_policy_document" "app_s3" {
   statement {
     effect = "Allow"
@@ -24,9 +20,4 @@ resource "aws_iam_policy" "app_s3" {
   description = "Allow ez-dk-citizen backend to access audio objects"
 
   policy = data.aws_iam_policy_document.app_s3.json
-}
-
-resource "aws_iam_user_policy_attachment" "name" {
-  user       = aws_iam_user.app.name
-  policy_arn = aws_iam_policy.app_s3.arn
 }
