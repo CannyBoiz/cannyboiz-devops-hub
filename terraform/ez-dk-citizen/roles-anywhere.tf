@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "roles_anywhere_assume_role" {
 resource "aws_iam_role" "app" {
   name                 = "ez-dk-citizen-role-anywhere-s3"
   description          = "IAM role anywhere used for ez-dk-citizen's S3"
-  max_session_duration = 3600
+  max_session_duration = 7200
   assume_role_policy   = data.aws_iam_policy_document.roles_anywhere_assume_role.json
 }
 
@@ -56,7 +56,7 @@ resource "aws_iam_role_policy_attachment" "app_s3" {
 resource "aws_rolesanywhere_profile" "app" {
   name                     = "ez-dk-citizen-prod"
   enabled                  = true
-  duration_seconds         = 3600
+  duration_seconds         = 7200
   accept_role_session_name = false
   role_arns                = [aws_iam_role.app.arn]
 }
