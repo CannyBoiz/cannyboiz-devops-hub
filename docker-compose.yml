@@ -1,6 +1,6 @@
 services:
   caddy:
-    image: caddy:latest
+    image: caddy:2.11.4
     container_name: caddy-gateway
     ports:
       - "80:80"

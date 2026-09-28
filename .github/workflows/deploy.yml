@@ -18,7 +18,7 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml,Caddyfile"
+          source: "docker-compose.yml,Caddyfile,deploy.sh"
           target: "/opt/caddy"
 
       - name: Start Caddy via SSH
@@ -27,13 +27,4 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /opt/caddy
-            # Ensure the sites directory exists with -p to avoid errors if it already exists
-            mkdir -p sites 
-            # Create the caddy_net network if it doesn't exist with 2>/dev/null to suppress errors if it already exists
-            docker network create caddy_net 2>/dev/null || true
-            docker compose pull
-            docker compose up -d
-            # Reload Caddy to apply the new configuration
-            docker exec caddy-gateway caddy reload --config /etc/caddy/Caddyfile
+          script: bash /opt/caddy/deploy.sh
