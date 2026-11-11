@@ -36,7 +36,7 @@ data "aws_iam_policy_document" "roles_anywhere_assume_role" {
     condition {
       test     = "StringEquals"
       variable = "aws:PrincipalTag/x509Subject/CN"
-      values   = ["aws-iam-app"]
+      values   = ["aws-iam"]
     }
   }
 }
