@@ -81,3 +81,22 @@ resource "aws_s3_bucket_versioning" "citizenship_audio" {
     status = "Suspended"
   }
 }
+
+# Versioning is suspended, so every delete under smoke/ leaves a delete marker
+# that the app role cannot remove. This only removes markers with no versions.
+resource "aws_s3_bucket_lifecycle_configuration" "citizenship_audio" {
+  bucket = aws_s3_bucket.citizenship_audio.id
+
+  rule {
+    id     = "expire-smoke-delete-markers"
+    status = "Enabled"
+
+    filter {
+      prefix = "smoke/"
+    }
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+  }
+}
