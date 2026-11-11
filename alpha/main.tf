@@ -18,13 +18,13 @@ terraform {
 # SSH key for manually accessing the server, you can generate this with `ssh-keygen` and then add the public key here
 resource "hcloud_ssh_key" "main" {
   name = "main-ssh-key"
-  public_key = file("~/.ssh/hetzner_first_cx23.pub")
+  public_key = file("~/.ssh/hcloud_alpha.pub")
 }
 
 # CI/CD public key 
 resource "hcloud_ssh_key" "ci_cd" {
   name = "ci-cd-ssh-key"
-  public_key = file("~/.ssh/github_key.pub")
+  public_key = file("~/.ssh/ci_cd_alpha.pub")
 }
 
 # Firewall to allow necessary ports
@@ -66,7 +66,7 @@ resource "hcloud_firewall" "myfirewall" {
 
 resource "hcloud_server" "myfirstvps" {
   name        = "my-first-vps"
-  image       = "ubuntu-22.04"
+  image       = "ubuntu-26.04"
   server_type = "cx23"
   location    = "nbg1"
   ssh_keys    = [hcloud_ssh_key.main.id, hcloud_ssh_key.ci_cd.id]
