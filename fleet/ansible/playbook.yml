@@ -1,0 +1,59 @@
+# Prepares every VPS in the Fleet. From fleet/ansible:
+#   ansible-galaxy collection install -r requirements.yml  # the inventory also needs the hcloud Python lib
+#   set -a; . ../.env; set +a
+#   ssh-add ~/.ssh/hcloud_alpha
+#   ansible-playbook playbook.yml --check --diff
+- name: Prepare the Fleet
+  hosts: all
+  tasks:
+    - name: Install Docker from Ubuntu's packages
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+          - python3-requests # docker_network needs it
+        update_cache: true
+        cache_valid_time: 3600
+      register: docker_pkgs
+
+    - name: Cap container logs at 10m x 3
+      ansible.builtin.copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "log-driver": "json-file",
+            "log-opts": { "max-size": "10m", "max-file": "3" }
+          }
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart Docker
+
+    # In check mode on a fresh VPS there's no Docker yet to ask
+    - when: not (ansible_check_mode and docker_pkgs is changed)
+      block:
+        - name: Enable and start Docker
+          ansible.builtin.systemd_service:
+            name: docker
+            enabled: true
+            state: started
+
+        - name: Create caddy_net
+          community.docker.docker_network:
+            name: caddy_net
+
+    - name: Create the Gateway and Project directories
+      ansible.builtin.file:
+        path: /opt/{{ item }}
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      loop: "{{ ['caddy', 'caddy/sites'] + projects }}"
+
+  handlers:
+    - name: Restart Docker
+      ansible.builtin.systemd_service:
+        name: docker
+        state: restarted
+      when: not (ansible_check_mode and docker_pkgs is changed)
