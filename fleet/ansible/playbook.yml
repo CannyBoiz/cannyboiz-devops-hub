@@ -1,8 +1,7 @@
 # Prepares every VPS in the Fleet. From fleet/ansible:
 #   ansible-galaxy collection install -r requirements.yml  # the inventory also needs the hcloud Python lib
-#   set -a; . ../.env; set +a
 #   ssh-add ~/.ssh/hcloud_alpha
-#   ansible-playbook playbook.yml --check --diff
+#   just fleet ansible-playbook playbook.yml --check --diff  # HCLOUD_TOKEN from the secrets repo
 - name: Prepare the Fleet
   hosts: all
   tasks:

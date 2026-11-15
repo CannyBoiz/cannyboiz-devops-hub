@@ -1,5 +1,5 @@
-# The read-write token lives in ../.env:
-#   set -a; . ../.env; set +a; terraform plan
+# The read-write HCLOUD_TOKEN comes from the secrets repo and never touches disk:
+#   just fleet terraform plan
 terraform {
   required_providers {
     hcloud = {
