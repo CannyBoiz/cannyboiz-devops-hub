@@ -1,30 +1,48 @@
-name: Deploy Caddy Gateway
+# Runs the Fleet playbook: prepares every VPS and deploys the Gateway (ADR 0002)
+name: Prepare the Fleet and deploy the Gateway
 
 on:
   push:
     branches:
       - main
+    paths:
+      - fleet/ansible/**
+      - fleet/gateway/**
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Two runs at once would race their Gateway restarts on the same VPS
+concurrency:
+  group: fleet
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: fleet/ansible
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: Copy files to Hetzner VPS
-        uses: appleboy/scp-action@v0.1.7
+      - uses: actions/setup-python@v7
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml,Caddyfile,deploy.sh"
-          target: "/opt/caddy"
+          python-version: "3.14"
 
-      - name: Start Caddy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: bash /opt/caddy/deploy.sh
+      - name: Install Ansible and the collections
+        # requests and python-dateutil: the hcloud inventory's vendored client needs them
+        run: |
+          pip install ansible-core==2.21.6 requests python-dateutil
+          ansible-galaxy collection install -r requirements.yml
+
+      - name: Run the playbook
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN_READONLY }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ANSIBLE_HOST_KEY_CHECKING: "False" # pinning is #3
+        run: |
+          key="$RUNNER_TEMP/fleet_ci"
+          (umask 077 && printf '%s\n' "$SSH_PRIVATE_KEY" > "$key")
+          ansible-playbook playbook.yml --private-key "$key"

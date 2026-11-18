@@ -1,5 +1,5 @@
 # Prepares every VPS in the Fleet and deploys the Gateway to it. From fleet/ansible:
-#   ansible-galaxy collection install -r requirements.yml  # the inventory also needs the hcloud Python lib
+#   ansible-galaxy collection install -r requirements.yml  # the inventory also needs requests and python-dateutil
 #   ssh-add ~/.ssh/hcloud_alpha
 #   just fleet ansible-playbook playbook.yml --check --diff  # HCLOUD_TOKEN from the secrets repo
 - name: Prepare the Fleet and deploy the Gateway
