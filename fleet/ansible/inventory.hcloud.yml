@@ -1,0 +1,5 @@
+# Every VPS in the Fleet, read from the Hetzner API (HCLOUD_TOKEN).
+# Inventory hostnames are the Hetzner server names.
+plugin: hetzner.hcloud.hcloud
+label_selector: fleet=cannyboiz
+connect_with: public_ipv4

@@ -1,0 +1,4 @@
+# Projects deployed onto this VPS; each gets /opt/<project>
+projects:
+  - respawn
+  - ez-dk-citizen

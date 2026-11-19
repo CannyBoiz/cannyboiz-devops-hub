@@ -1,0 +1,97 @@
+# Prepares every VPS in the Fleet and deploys the Gateway to it. From fleet/ansible:
+#   ansible-galaxy collection install -r requirements.yml  # the inventory also needs requests and python-dateutil
+#   ssh-add ~/.ssh/hcloud_alpha
+#   just fleet ansible-playbook playbook.yml --check --diff  # HCLOUD_TOKEN from the secrets repo
+- name: Prepare the Fleet and deploy the Gateway
+  hosts: all
+  serial: 1 # a failed VPS fails its whole batch, which stops the play
+  tasks:
+    - name: Install Docker from Ubuntu's packages
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+          - python3-requests # docker_network needs it
+        update_cache: true
+        cache_valid_time: 3600
+      register: docker_pkgs
+
+    - name: Cap container logs at 10m x 3
+      ansible.builtin.copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "log-driver": "json-file",
+            "log-opts": { "max-size": "10m", "max-file": "3" }
+          }
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart Docker
+
+    # In check mode on a fresh VPS there's no Docker yet to ask
+    - when: not (ansible_check_mode and docker_pkgs is changed)
+      block:
+        - name: Enable and start Docker
+          ansible.builtin.systemd_service:
+            name: docker
+            enabled: true
+            state: started
+
+        - name: Create caddy_net
+          community.docker.docker_network:
+            name: caddy_net
+
+    - name: Create the Gateway and Project directories
+      ansible.builtin.file:
+        path: /opt/{{ item }}
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      loop: "{{ ['caddy', 'caddy/sites'] + projects }}"
+
+    - name: Restart Docker with the log settings before the Gateway's container exists
+      ansible.builtin.meta: flush_handlers
+
+    - name: Copy the Gateway files
+      ansible.builtin.copy:
+        src: ../gateway/{{ item }}
+        dest: /opt/caddy/{{ item }}
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - Caddyfile
+        - docker-compose.yml
+      notify:
+        - Validate the Gateway
+        - Restart the Gateway
+
+    - name: Start the Gateway
+      community.docker.docker_compose_v2:
+        project_src: /opt/caddy
+      when: not (ansible_check_mode and docker_pkgs is changed)
+
+  handlers:
+    - name: Restart Docker
+      ansible.builtin.systemd_service:
+        name: docker
+        state: restarted
+      when: not (ansible_check_mode and docker_pkgs is changed)
+
+    # A throwaway container sees the new Caddyfile (see below); on a bad config the
+    # VPS fails here, the live Gateway keeps its old config and serial stops the play
+    - name: Validate the Gateway
+      ansible.builtin.command: docker compose run --rm --no-deps caddy caddy validate --config /etc/caddy/Caddyfile
+      args:
+        chdir: /opt/caddy
+      changed_when: false
+
+    # Not `caddy reload`: copy replaces the Caddyfile by rename, and the running
+    # container's single-file bind mount keeps showing the old one until a restart
+    - name: Restart the Gateway
+      community.docker.docker_compose_v2:
+        project_src: /opt/caddy
+        state: restarted
+      when: not (ansible_check_mode and docker_pkgs is changed)
