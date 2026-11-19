@@ -78,21 +78,24 @@ resource "aws_s3_bucket_versioning" "citizenship_audio" {
   bucket = aws_s3_bucket.citizenship_audio.id
 
   versioning_configuration {
-    status = "Suspended"
+    status = "Enabled"
   }
 }
 
-# Versioning is suspended, so every delete under smoke/ leaves a delete marker
-# that the app role cannot remove. This only removes markers with no versions.
+# ez-dk-citizen ADR 0010: the app role has no s3:DeleteObjectVersion, so a
+# delete only hides an object. Its old version stays recoverable until this
+# rule removes it, along with the delete marker it leaves behind.
 resource "aws_s3_bucket_lifecycle_configuration" "citizenship_audio" {
   bucket = aws_s3_bucket.citizenship_audio.id
 
   rule {
-    id     = "expire-smoke-delete-markers"
+    id     = "expire-noncurrent-versions-and-delete-markers"
     status = "Enabled"
 
-    filter {
-      prefix = "smoke/"
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30
     }
 
     expiration {
