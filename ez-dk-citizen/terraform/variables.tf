@@ -16,7 +16,8 @@ variable "admin_production_origin" {
   nullable    = true
 
   validation {
-    condition     = var.admin_production_origin == null || can(regex("^https?://[^/]+$", var.admin_production_origin))
-    error_message = "admin_production_origin must be null or an HTTP(S) origin without a path."
+    # The Admin hashes uploads with WebCrypto, which browsers offer only in a secure context.
+    condition     = var.admin_production_origin == null || can(regex("^https://[^/]+$", var.admin_production_origin))
+    error_message = "admin_production_origin must be null or an HTTPS origin without a path."
   }
 }
