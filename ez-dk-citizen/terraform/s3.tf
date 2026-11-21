@@ -20,7 +20,7 @@ resource "aws_s3_bucket_cors_configuration" "citizenship_audio" {
   bucket = aws_s3_bucket.citizenship_audio.id
 
   cors_rule {
-    allowed_headers = ["content-type", "if-none-match"]
+    allowed_headers = ["content-type", "if-none-match", "x-amz-checksum-sha256"]
     allowed_methods = ["PUT"]
     allowed_origins = compact([
       var.admin_local_origin,
